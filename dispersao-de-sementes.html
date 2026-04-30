@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispersão de Sementes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-deep:   #1a3a1a;
+    --green-mid:    #2d6a2d;
+    --green-light:  #4a9e4a;
+    --green-pale:   #c8e6c8;
+    --amber:        #d4a017;
+    --amber-light:  #f5d87a;
+    --stone:        #8c7b6b;
+    --stone-light:  #d7cbb5;
+    --slate:        #9e9e9e;
+    --slate-light:  #e0e0e0;
+    --cream:        #f7f3ee;
+    --parchment:    #ede7db;
+    --ink:          #1c1c1a;
+    --ink-soft:     #3d3d38;
+    --red-loss:     #c62828;
+    --blue-player:  #1565c0;
+    --orange-player:#bf360c;
+    --purple-player:#6a1b9a;
+    --gold-player:  #e65100;
+
+    --cell: 44px;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body:    'DM Sans', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+  }
+
+  body {
+    background-color: var(--cream);
+    color: var(--ink);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 10% 10%, rgba(45,106,45,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 90% 90%, rgba(212,160,23,0.06) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='0.6' fill='%231a3a1a' opacity='0.07'/%3E%3C/svg%3E");
+  }
+
+  /* ───── Header ───── */
+  header {
+    text-align: center;
+    padding: 2.5rem 1rem 1.5rem;
+    position: relative;
+  }
+  header::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green-mid), transparent);
+    margin: 1rem auto 0;
+  }
+  header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    font-weight: 700;
+    color: var(--green-deep);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+  header h1 span { color: var(--amber); }
+  header p {
+    font-size: 0.8rem;
+    color: var(--stone);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 0.4rem;
+    font-family: var(--font-mono);
+  }
+
+  /* ───── Main layout ───── */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1rem 3rem;
+  }
+
+  /* ───── Setup panel ───── */
+  #setup-panel {
+    background: var(--parchment);
+    border: 1px solid rgba(26,58,26,0.12);
+    border-radius: 16px;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+  #setup-panel h2 {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: var(--green-deep);
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.02em;
+  }
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem 1.5rem;
+    margin-bottom: 1.4rem;
+  }
+  .ctrl label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--stone);
+    font-family: var(--font-mono);
+    margin-bottom: 0.35rem;
+  }
+  .ctrl strong {
+    color: var(--green-deep);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 3px;
+    background: var(--green-pale);
+    border-radius: 2px;
+    outline: none;
+    margin-top: 6px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--green-mid);
+    cursor: pointer;
+    border: 2px solid var(--cream);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    transition: transform 0.15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  select {
+    width: 100%;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid rgba(26,58,26,0.2);
+    border-radius: 8px;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    cursor: pointer;
+    outline: none;
+    margin-top: 4px;
+  }
+  select:focus { border-color: var(--green-mid); }
+
+  .btn-start {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--green-deep);
+    color: var(--cream);
+    border: none;
+    padding: 0.7rem 1.8rem;
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.02em;
+  }
+  .btn-start:hover { background: var(--green-mid); }
+  .btn-start:active { transform: scale(0.97); }
+
+  .btn-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    color: var(--stone);
+    border: 1px solid rgba(0,0,0,0.15);
+    padding: 0.5rem 1.2rem;
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-reset:hover { background: var(--parchment); color: var(--ink); }
+
+  /* ───── Game area ───── */
+  #game-area { display: none; }
+
+  /* ───── Legend ───── */
+  #legend {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.7rem;
+    color: var(--stone);
+    font-family: var(--font-mono);
+    margin-bottom: 1rem;
+    letter-spacing: 0.04em;
+  }
+  .leg-item { display: flex; align-items: center; gap: 5px; }
+  .leg-box {
+    width: 20px; height: 20px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+
+  /* ───── Spawn notice ───── */
+  #spawn-notice {
+    font-size: 0.72rem;
+    color: var(--stone);
+    font-family: var(--font-mono);
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+  }
+
+  /* ───── Scoreboard ───── */
+  #scoreboard {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 0.8rem;
+  }
+  .score-card {
+    background: var(--parchment);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 10px;
+    padding: 0.55rem 1rem;
+    min-width: 90px;
+    text-align: center;
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .score-card.active-turn {
+    border-color: var(--green-mid);
+    box-shadow: 0 0 0 2px rgba(45,106,45,0.15);
+  }
+  .s-name {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--stone);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .s-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .s-pts {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--ink);
+    line-height: 1.2;
+    margin-top: 2px;
+  }
+
+  /* ───── Turn info + msg ───── */
+  #turn-info {
+    font-size: 0.82rem;
+    color: var(--stone);
+    font-family: var(--font-mono);
+    margin-bottom: 0.4rem;
+    min-height: 18px;
+  }
+  #msg-bar {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    min-height: 20px;
+    margin-bottom: 0.6rem;
+    font-family: var(--font-body);
+    transition: color 0.2s;
+  }
+
+  /* ───── Board ───── */
+  #board-wrap { overflow-x: auto; margin-bottom: 1rem; }
+  table#board { border-collapse: collapse; }
+  table#board td {
+    width: var(--cell); height: var(--cell);
+    border: 1px solid rgba(0,0,0,0.07);
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+    font-size: 18px;
+    text-align: center;
+    vertical-align: middle;
+    transition: filter 0.12s, transform 0.1s;
+  }
+  table#board td:hover:not(.no-hover) {
+    filter: brightness(0.88);
+    transform: scale(1.04);
+    z-index: 2;
+  }
+
+  /* Cell types */
+  .cell-unrevealed  { background: var(--parchment); }
+  .cell-tree        { background: var(--green-mid); cursor: default !important; }
+  .cell-mountain    { background: #c0bdb8; }
+  .cell-dry         { background: var(--stone-light); }
+  .cell-bonus       { background: #fff59d; }
+  .cell-bonus.revealed { background: #ffe082; }
+  .cell-empty       { background: #f0f7f0; }
+  .no-hover         { cursor: default !important; }
+
+  /* Cell labels */
+  .cell-pts-label {
+    font-size: 8px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    position: absolute;
+    top: 2px; left: 3px;
+    line-height: 1;
+  }
+  .cell-owner-label {
+    font-size: 8px;
+    font-family: var(--font-mono);
+    position: absolute;
+    bottom: 2px; right: 3px;
+    line-height: 1;
+    opacity: 0.7;
+  }
+
+  /* ───── End overlay ───── */
+  #end-area { margin-top: 1rem; }
+  .end-overlay {
+    background: var(--parchment);
+    border: 1px solid rgba(26,58,26,0.15);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+  }
+  .end-overlay h3 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--green-deep);
+    margin-bottom: 1rem;
+  }
+  .end-rows {
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
+    margin-bottom: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .end-row-item { display: flex; align-items: center; gap: 8px; }
+
+  /* ───── Footer ───── */
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    color: var(--stone);
+    letter-spacing: 0.08em;
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Dispersão de <span>Sementes</span></h1>
+  <p>Jogo de estratégia para 2–5 jogadores</p>
+</header>
+
+<main>
+  <!-- Setup -->
+  <div id="setup-panel">
+    <h2>Nova partida</h2>
+    <div class="controls-grid">
+      <div class="ctrl">
+        <label>Jogadores — <strong id="np-val">2</strong></label>
+        <input type="range" id="np-slider" min="2" max="5" value="2"
+          oninput="document.getElementById('np-val').textContent=this.value">
+      </div>
+      <div class="ctrl">
+        <label>Tabuleiro — <strong id="sz-val">10</strong>×<strong id="sz-val2">10</strong></label>
+        <input type="range" id="sz-slider" min="8" max="14" value="10"
+          oninput="document.getElementById('sz-val').textContent=this.value;document.getElementById('sz-val2').textContent=this.value">
+      </div>
+      <div class="ctrl">
+        <label>Dificuldade</label>
+        <select id="diff-sel">
+          <option value="easy">Fácil — poucas montanhas</option>
+          <option value="med" selected>Normal</option>
+          <option value="hard">Difícil — muitas montanhas</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-start" onclick="startGame()">🌱 Iniciar partida</button>
+  </div>
+
+  <!-- Game -->
+  <div id="game-area">
+    <div id="legend">
+      <div class="leg-item"><div class="leg-box" style="background:#2d6a2d">🌳</div>Árvore</div>
+      <div class="leg-item"><div class="leg-box" style="background:#ede7db"></div>Não revelado</div>
+      <div class="leg-item"><div class="leg-box" style="background:#c0bdb8">⛰</div>Montanha −5</div>
+      <div class="leg-item"><div class="leg-box" style="background:#d7cbb5">🏜</div>Terra seca −2</div>
+      <div class="leg-item"><div class="leg-box" style="background:#ffe082">⭐</div>Bônus +distância</div>
+      <div class="leg-item"><div class="leg-box" style="background:#f0f7f0">🌱</div>Solo fértil +distância</div>
+    </div>
+    <div id="spawn-notice"></div>
+    <div id="scoreboard"></div>
+    <div id="turn-info"></div>
+    <div id="msg-bar"></div>
+    <div id="board-wrap"><table id="board"></table></div>
+    <button class="btn-reset" onclick="resetGame()">↩ Novo jogo</button>
+  </div>
+
+  <div id="end-area"></div>
+</main>
+
+<footer>dispersão de sementes · jogo de tabuleiro digital</footer>
+
+<script>
+  const PLAYER_COLORS = ['#2d6a2d','#1565c0','#bf360c','#6a1b9a','#e65100'];
+  const PLAYER_EMOJIS = ['🌳','🌲','🌴','🌵','🎋'];
+  const PLAYER_NAMES  = ['Verde','Azul','Laranja','Roxo','Amarelo'];
+
+  let G = {};
+
+  function randomTreePositions(sz, np) {
+    const minDist = Math.max(3, Math.floor(sz * 0.35));
+    const positions = [];
+    let tries = 0;
+    while (positions.length < np && tries < 2000) {
+      tries++;
+      const r = Math.floor(Math.random() * sz);
+      const c = Math.floor(Math.random() * sz);
+      let ok = true;
+      for (const [pr, pc] of positions) {
+        if (Math.abs(r-pr) + Math.abs(c-pc) < minDist) { ok = false; break; }
+      }
+      if (ok) positions.push([r, c]);
+    }
+    if (positions.length < np) {
+      positions.length = 0;
+      const relaxed = Math.max(2, Math.floor(sz * 0.2));
+      tries = 0;
+      while (positions.length < np && tries < 2000) {
+        tries++;
+        const r = Math.floor(Math.random() * sz);
+        const c = Math.floor(Math.random() * sz);
+        let ok = true;
+        for (const [pr, pc] of positions) {
+          if (Math.abs(r-pr)+Math.abs(c-pc) < relaxed) { ok = false; break; }
+        }
+        if (ok) positions.push([r, c]);
+      }
+    }
+    return positions;
+  }
+
+  function startGame() {
+    const np   = parseInt(document.getElementById('np-slider').value);
+    const sz   = parseInt(document.getElementById('sz-slider').value);
+    const diff = document.getElementById('diff-sel').value;
+    const mRate = diff==='easy'?0.08 : diff==='hard'?0.20 : 0.13;
+    const dRate = diff==='easy'?0.06 : diff==='hard'?0.12 : 0.09;
+    const bRate = 0.05;
+
+    let grid = [];
+    for (let r=0;r<sz;r++) {
+      grid.push([]);
+      for (let c=0;c<sz;c++)
+        grid[r].push({type:'empty',revealed:false,owner:null,seedPts:0,distPerPlayer:[]});
+    }
+
+    const treePos = randomTreePositions(sz, np);
+    for (let p=0;p<np;p++) {
+      const [tr,tc] = treePos[p];
+      grid[tr][tc].type='tree'; grid[tr][tc].owner=p; grid[tr][tc].revealed=true;
+    }
+
+    for (let r=0;r<sz;r++) for (let c=0;c<sz;c++) {
+      if (grid[r][c].type!=='empty') continue;
+      const rng = Math.random();
+      if      (rng < mRate)           grid[r][c].type='mountain';
+      else if (rng < mRate+dRate)     grid[r][c].type='dry';
+      else if (rng < mRate+dRate+bRate) grid[r][c].type='bonus';
+    }
+
+    for (let r=0;r<sz;r++) for (let c=0;c<sz;c++) {
+      grid[r][c].distPerPlayer = treePos.map(([tr,tc])=>Math.abs(r-tr)+Math.abs(c-tc));
+    }
+
+    G = { sz, np, grid, treePos, turn:0, scores:new Array(np).fill(0), turnsLeft:sz*sz-np, gameOver:false };
+
+    const spawnDesc = treePos.map(([r,c],i)=>
+      `<span style="color:${PLAYER_COLORS[i]};font-weight:500">${PLAYER_NAMES[i]} ${PLAYER_EMOJIS[i]}</span> (${r+1},${c+1})`
+    ).join(' · ');
+    document.getElementById('spawn-notice').innerHTML = 'Posições: ' + spawnDesc;
+
+    document.getElementById('setup-panel').style.display = 'none';
+    document.getElementById('game-area').style.display   = 'block';
+    document.getElementById('end-area').style.display    = 'none';
+    document.getElementById('end-area').innerHTML        = '';
+
+    renderBoard(); renderScores(); updateTurnInfo();
+  }
+
+  function resetGame() {
+    G = {};
+    document.getElementById('setup-panel').style.display = 'block';
+    document.getElementById('game-area').style.display   = 'none';
+    document.getElementById('end-area').style.display    = 'none';
+    document.getElementById('msg-bar').textContent = '';
+  }
+
+  function cellPoints(cell, p) {
+    const dist = cell.distPerPlayer[p];
+    if (cell.type==='mountain') return -5;
+    if (cell.type==='dry')      return -2;
+    if (cell.type==='bonus')    return 10 + dist;
+    return dist;
+  }
+
+  function revealCell(r, c) {
+    if (G.gameOver) return;
+    const cell = G.grid[r][c];
+    if (cell.revealed || cell.type==='tree') return;
+    const p   = G.turn;
+    const pts = cellPoints(cell, p);
+    cell.revealed=true; cell.owner=p; cell.seedPts=pts;
+    G.scores[p] += pts;
+
+    const msgs = {
+      mountain:`⛰ Montanha! ${PLAYER_NAMES[p]} perdeu 5 pontos.`,
+      dry:     `🏜 Terra seca! ${PLAYER_NAMES[p]} perdeu 2 pontos.`,
+      bonus:   `⭐ Bônus! ${PLAYER_NAMES[p]} ganhou ${pts} pontos!`,
+      empty:   `🌱 Solo fértil! +${pts} pontos para ${PLAYER_NAMES[p]}.`,
+    };
+    const bar = document.getElementById('msg-bar');
+    bar.textContent = msgs[cell.type]||'';
+    bar.style.color = pts < 0 ? '#c62828' : '#1b5e20';
+
+    G.turnsLeft--;
+    G.turn = (G.turn+1) % G.np;
+    renderBoard(); renderScores(); updateTurnInfo();
+    if (G.turnsLeft<=0) endGame();
+  }
+
+  function renderBoard() {
+    const {sz,grid,gameOver} = G;
+    let html='';
+    for (let r=0;r<sz;r++) {
+      html += '<tr>';
+      for (let c=0;c<sz;c++) {
+        const cell = grid[r][c];
+        let cls='cell-unrevealed', icon='', ptsLbl='', ownerLbl='';
+        if (cell.type==='tree') {
+          cls='cell-tree no-hover'; icon=PLAYER_EMOJIS[cell.owner];
+        } else if (cell.revealed) {
+          const map = {mountain:'cell-mountain',dry:'cell-dry',bonus:'cell-bonus revealed',empty:'cell-empty'};
+          const ico = {mountain:'⛰',dry:'🏜',bonus:'⭐',empty:'🌱'};
+          cls=(map[cell.type]||'cell-empty')+' no-hover'; icon=ico[cell.type]||'';
+          const sign = cell.seedPts>=0?'+':'';
+          ptsLbl=`<span class="cell-pts-label" style="color:${cell.seedPts<0?'#c62828':'#2d6a2d'}">${sign}${cell.seedPts}</span>`;
+          if (cell.owner!==null)
+            ownerLbl=`<span class="cell-owner-label" style="color:${PLAYER_COLORS[cell.owner]}">${PLAYER_NAMES[cell.owner][0]}</span>`;
+        }
+        const click = (!cell.revealed && cell.type!=='tree' && !gameOver)
+          ? `onclick="revealCell(${r},${c})"` : '';
+        html += `<td class="${cls}" ${click}>${icon}${ptsLbl}${ownerLbl}</td>`;
+      }
+      html += '</tr>';
+    }
+    document.getElementById('board').innerHTML = html;
+  }
+
+  function renderScores() {
+    let html='';
+    for (let p=0;p<G.np;p++) {
+      const active = G.turn===p && !G.gameOver;
+      html+=`<div class="score-card${active?' active-turn':''}">
+        <div class="s-name"><span class="s-dot" style="background:${PLAYER_COLORS[p]}"></span>${PLAYER_NAMES[p]} ${PLAYER_EMOJIS[p]}</div>
+        <div class="s-pts">${G.scores[p]}</div>
+      </div>`;
+    }
+    document.getElementById('scoreboard').innerHTML=html;
+  }
+
+  function updateTurnInfo() {
+    if (G.gameOver) return;
+    const p=G.turn;
+    document.getElementById('turn-info').innerHTML=
+      `<span style="color:${PLAYER_COLORS[p]};font-weight:500">${PLAYER_NAMES[p]} ${PLAYER_EMOJIS[p]}</span> — clique em uma célula para dispersar sua semente`;
+  }
+
+  function endGame() {
+    G.gameOver=true;
+    document.getElementById('turn-info').textContent='';
+    const maxScore=Math.max(...G.scores);
+    const winners=G.scores.map((s,i)=>({s,i})).filter(x=>x.s===maxScore);
+    const rows=G.scores.map((s,i)=>
+      `<div class="end-row-item"><span class="s-dot" style="background:${PLAYER_COLORS[i]};width:10px;height:10px;border-radius:50%;display:inline-block"></span><strong>${PLAYER_NAMES[i]}</strong> ${PLAYER_EMOJIS[i]} — ${s} pts</div>`
+    ).join('');
+    const winTxt = winners.length===1
+      ? `🏆 Vencedor: <span style="color:${PLAYER_COLORS[winners[0].i]}">${PLAYER_NAMES[winners[0].i]} ${PLAYER_EMOJIS[winners[0].i]}</span>`
+      : `🤝 Empate: ${winners.map(w=>`${PLAYER_NAMES[w.i]} ${PLAYER_EMOJIS[w.i]}`).join(' e ')}`;
+    const ea=document.getElementById('end-area');
+    ea.style.display='block';
+    ea.innerHTML=`<div class="end-overlay"><h3>${winTxt}</h3><div class="end-rows">${rows}</div><button class="btn-start" onclick="resetGame()" style="margin-top:4px">🌱 Jogar novamente</button></div>`;
+    renderBoard(); renderScores();
+    document.getElementById('msg-bar').textContent='Fim de jogo! Todas as células foram reveladas.';
+    document.getElementById('msg-bar').style.color='var(--ink-soft)';
+  }
+</script>
+</body>
+</html>
